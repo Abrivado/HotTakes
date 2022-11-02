@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator')
 
 
 mongoose.connect('mongodb+srv://clement:openclassroom@cluster0.eqsutdp.mongodb.net/?retryWrites=true&w=majority',
@@ -8,10 +9,11 @@ mongoose.connect('mongodb+srv://clement:openclassroom@cluster0.eqsutdp.mongodb.n
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
   const userSchema = new mongoose.Schema({
-      email: String,
-      password: String
- })
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+})
+userSchema.plugin(uniqueValidator)
 
- const User = mongoose.model("User", userSchema)
- 
- module.exports = (mongoose, User)
+const User = mongoose.model("User", userSchema)
+
+module.exports = {mongoose, User}

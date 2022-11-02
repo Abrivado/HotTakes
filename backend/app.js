@@ -1,42 +1,42 @@
 const express = require('express');
 const app = express();
 const cors = require ('cors')
-const mongoose = require('mongoose');
+const bodyParser = require ("body-parser")
+const path = require("path")
 
 
-// Database
-mongoose.connect('mongodb+srv://clement:openclassroom@cluster0.eqsutdp.mongodb.net/?retryWrites=true&w=majority',
-  { useNewUrlParser: true,
-    useUnifiedTopology: true })
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+// Connexion to Database
+require("./mongo")
 
-  const userSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    password: { type: String, required: true }
-})
-
-const User = mongoose.model("User", userSchema)
+// Controllers
+const {createUser, logUser} = require("./controllers/users")
+const {getSauces, createSauce, getSauceById, deleteSauce, modifySauce} = require ("./controllers/sauces")
 
 
 // Middleware
 app.use(cors())
 app.use(express.json())
 
+const {upload} = require("./middleware/multer")
+const {verifUser} = require ("./middleware/auth")
+
 
 // Routes
-app.post("/api/auth/signup", (req, res) => {
-    console.log("Signup request:", req.body)
-    const email = req.body.email
-    const password = req.body.password
-    const user = new User ({ email: email, password: password})
-user.save()
-.then((res) => console.log("User enregistré !" ,res))
-.catch((err) => console.log("User pas enregistré", err)) 
-   
-   res.send({ message: "Utilisateur enregistré !" })
-})
+app.post("/api/auth/signup", createUser)
+app.post("/api/auth/login", logUser)
+app.get("/api/sauces", verifUser, getSauces)
+app.post("/api/sauces", verifUser, upload.single("image"), createSauce)
+app.get("/api/sauces/:id", verifUser, getSauceById)
+app.delete("/api/sauces/:id", verifUser, deleteSauce)
+app.put("/api/sauces/:id", verifUser, upload.single("image"),  modifySauce)
+
+
+app.use("/images", express.static("images"))
+
 
 
 module.exports = app
+
+
+
 
