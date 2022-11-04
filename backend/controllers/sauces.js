@@ -59,7 +59,7 @@ const {
     params: { id }  
 } = req
 
-const hasNewImage = req.file != null   // si changement image : true // si que changement de texte : false
+const hasNewImage = req.file != null   // si changement image -> true // si que changement de texte : false
 const payload = makePayload(hasNewImage, req)
 
 
@@ -87,7 +87,7 @@ function sendClientResponse(dataBaseResponse, res){
         }
             console.log("UPDATE OK", dataBaseResponse)
             return Promise.resolve(res.send({message: "Update OK"})).then(  // res.send n'est pas une promesse de base du coup j'ai du la transformer en promesse
-                ()=> product)
+                ()=> dataBaseResponse)
 }
 
 
@@ -131,5 +131,62 @@ function createSauce(req, res){
     .catch(console.error)
 }
 
+function likeSauce(req,res){
+    const like = req.body.like
+    const userId = req.body.userId
+    console.log("like, userId", like, userId)
 
-module.exports = {getSauces, createSauce, getSauceById, deleteSauce, modifySauce}
+    if (![0,-1,1].includes(like)) return res.status(403).send({message : "Mauvaise requête"}) // cela signifie que si la valeur du like est différente de 0 1 ou -1 la fonction s'arrete ici
+
+    const id = req.params.id
+    Product.findById(id)
+    .then((product)=> updateVote(product, like, userId, res))
+    .then (p => p.save())
+    .then(prod => sendClientResponse(prod,res))
+    .catch((err) => res.status(500).send(err))
+
+}
+
+function updateVote(product, like, userId, res) {
+    if (like === 1 || like === -1) return incrementVote(product, userId, like)
+    return resetVote(product, userId, res)
+  }
+
+function resetVote(product, userId, res){
+    console.log("RESET VOTE AFTER: ", product)
+
+    const {usersLiked, usersDisliked} = product
+    if ([usersLiked, usersDisliked].every((arr) => arr.includes(userId)))   // pour etre sur que l'user vote une seule fois
+    return Promise.reject("L'utilisateur a voté 2 fois")
+
+    if (![usersLiked, usersDisliked].some(arr => arr.includes(userId)))   // pour etre sue que l'user a deja voté une fois
+    return Promise.reject("L'utilisateur n'a pas déjà voté")
+
+
+    if (usersLiked.includes(userId)) {
+        --product.likes
+        product.usersLiked = product.usersLiked.filter((id) => id !== userId)
+      } else {
+        --product.dislikes
+        product.usersDisliked = product.usersDisliked.filter((id) => id !== userId)
+      }
+    
+
+    console.log("RESET VOTE AFTER: ", product)
+    return product
+}
+
+
+function incrementVote(product, userId, like) {
+    const { usersLiked, usersDisliked } = product
+  
+    const votersArray = like === 1 ? usersLiked : usersDisliked
+    if (votersArray.includes(userId)) return product
+    votersArray.push(userId)
+  
+    like === 1 ? ++product.likes : ++product.dislikes
+    return product
+  }
+  
+
+module.exports = {getSauces, createSauce, getSauceById, deleteSauce, modifySauce, likeSauce}

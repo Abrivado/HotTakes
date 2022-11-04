@@ -10,7 +10,7 @@ require("./mongo")
 
 // Controllers
 const {createUser, logUser} = require("./controllers/users")
-const {getSauces, createSauce, getSauceById, deleteSauce, modifySauce} = require ("./controllers/sauces")
+const {getSauces, createSauce, getSauceById, deleteSauce, modifySauce, likeSauce} = require ("./controllers/sauces")
 
 
 // Middleware
@@ -29,6 +29,9 @@ app.post("/api/sauces", verifUser, upload.single("image"), createSauce)
 app.get("/api/sauces/:id", verifUser, getSauceById)
 app.delete("/api/sauces/:id", verifUser, deleteSauce)
 app.put("/api/sauces/:id", verifUser, upload.single("image"),  modifySauce)
+app.post("/api/sauces/:id/like", verifUser, likeSauce)
+
+
 
 
 app.use("/images", express.static("images"))
