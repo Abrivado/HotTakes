@@ -1,11 +1,11 @@
 const multer = require ("multer")
 
-const storage = multer.diskStorage({
-    destination: "images/", 
+const storage = multer.diskStorage({   
+    destination: "images/",   // permet de dire que les images upload seront stockés dans le dossier image
     filename : makeFilename})
 
 function makeFilename (req, file, cb){
-     cb(null, Date.now()+ "-"+ file.originalname) // Date.nomw sert à modifier le nom de l'image si jamais 2 personnes upload 2 images du meme nom 
+     cb(null, Date.now()+ "-"+ file.originalname) // Date.now sert à rajouter la date en suffixe au nom de l'image si jamais 2 personnes upload 2 images du meme nom 
  }
 
 
