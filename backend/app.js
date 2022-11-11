@@ -4,12 +4,8 @@ const cors = require ('cors')
 const {sauceRouter} = require("./routers/sauces.router")
 const {authRouter} = require("./routers/auth.router")
 
-
-
 // Connexion to Database
 require("./mongo")
-
-
 
 // Middleware
 app.use(cors())
